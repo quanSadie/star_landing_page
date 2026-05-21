@@ -23,6 +23,8 @@
       --text: #e2e8f0;
       --text-muted: #94a3b8;
       --text-subtle: #64748b;
+      /* Tech-style headlines that also handle Vietnamese diacritics cleanly.
+         Use instead of Orbitron whenever the text isn't pure digits. */
       --font-tech: 'Space Grotesk', 'Inter', system-ui, sans-serif;
     }
 
@@ -393,28 +395,42 @@
       margin: 24px auto 60px;
       padding: 0 20px;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 20px;
+      /* Narrower min → more cards per row, each smaller. Less image upscale,
+         so source images stay closer to their native sharpness. */
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
     }
 
     .card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 16px;
+      border-radius: 14px;
       overflow: hidden;
       position: relative;
-      transition: transform 0.25s ease, border-color 0.25s ease;
+      transition:
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
       display: flex;
       flex-direction: column;
     }
 
     .card:hover {
-      transform: translateY(-3px);
-      border-color: rgba(0,245,160,0.25);
+      transform: translateY(-5px);
+      border-color: rgba(0,245,160,0.45);
+      box-shadow:
+        0 14px 32px -10px rgba(0,0,0,0.7),
+        0 6px 14px -6px rgba(0,245,160,0.18);
     }
 
-    /* Only rendered when a product has imageUrl. No gradient fallback —
-       cards without images skip the media area entirely (cleaner look). */
+    /* Subtle zoom on the product image when its card is hovered. */
+    .card:hover .card-media img {
+      transform: scale(1.06);
+    }
+
+    /* Always rendered. Default gradient acts as the backdrop — visible when
+       a card has no imageUrl, or when the image fails to load. When the image
+       loads successfully it covers the gradient via object-fit: cover. */
     .card-media {
       position: relative;
       height: 110px;
@@ -423,6 +439,20 @@
       justify-content: center;
       overflow: hidden;
       border-bottom: 1px solid rgba(255,255,255,0.04);
+      background:
+        linear-gradient(135deg, rgba(0,245,160,0.15), rgba(124,58,237,0.10) 60%, rgba(245,158,11,0.08));
+    }
+
+    /* Top scrim — darkens the image's top strip so the floating badge stays
+       readable regardless of how bright the underlying artwork is. */
+    .card-media::after {
+      content: '';
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 56px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.45), transparent);
+      pointer-events: none;
+      z-index: 1;
     }
 
     .card-media img {
@@ -430,21 +460,29 @@
       inset: 0;
       width: 100%; height: 100%;
       object-fit: cover;
+      transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+      /* Hint to the browser's image scaling to favor sharpness over smoothness
+         when downscaling. Helps low-res source images look less mushy. */
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
     }
 
     .card-badge {
       position: absolute;
-      top: 12px; right: 12px;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(0,245,160,0.3);
+      top: 10px; right: 10px;
+      z-index: 2;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(0,245,160,0.35);
       color: var(--primary);
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 700;
-      letter-spacing: 1.5px;
+      letter-spacing: 1.2px;
       text-transform: uppercase;
-      padding: 3px 10px;
+      padding: 3px 9px;
       border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
     }
 
     .card-badge.alt {
@@ -458,22 +496,22 @@
     }
 
     .card-body {
-      padding: 20px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 8px;
       flex: 1;
     }
 
     /* Reserve 2-line height so titles like "Premium Battle Pass" that wrap
        don't push the price row down — all cards in a row stay aligned. */
     .card-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
       color: var(--text);
       line-height: 1.3;
-      padding-right: 70px;
-      min-height: calc(15px * 1.3 * 2);
+      padding-right: 56px;
+      min-height: calc(14px * 1.3 * 2);
       display: -webkit-box;
       -webkit-line-clamp: 2;
       line-clamp: 2;
@@ -481,10 +519,8 @@
       overflow: hidden;
     }
 
-    .card-divider {
-      height: 1px;
-      background: linear-gradient(90deg, var(--card-border), transparent);
-    }
+    /* card-divider removed — visual structure now comes from card-body gap
+       + margin-top: auto on price row. Cleaner, less line noise. */
 
     /* margin-top: auto pushes the price row to the bottom of the card body
        regardless of how tall the title block is. Combined with the fixed-height
@@ -510,7 +546,7 @@
       font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
       font-variant-numeric: tabular-nums;
       font-feature-settings: 'tnum' 1;
-      font-size: 22px;
+      font-size: 18px;
       font-weight: 700;
       letter-spacing: -0.3px;
       color: var(--primary);
@@ -1227,29 +1263,21 @@
     // ═══ HARD-CODED DATA ═══════════════════════════════════
     // Edit ở đây khi rate đổi. `imageUrl` có thể paste URL ảnh sản phẩm
     // (Imgur, Discord CDN, ...); để trống thì dùng emoji + gradient.
+    // imageUrl naming: wwm_<id>.jpg in same folder.
+    //   Echo Beads packs use the bead count: wwm_180.jpg, wwm_300.jpg, …, wwm_12000.jpg
+    //   Subscription packs use a short slug:  wwm_bp.jpg, wwm_premium.jpg, wwm_monthly.jpg
     const WWM_PACKAGES = [
-      { id: 'wwm-bp',          title: 'Battle Pass',         price: 220_000, badge: 'BP',       icon: '🎖️',
-        media: { from: 'rgba(245,158,11,0.25)', to: 'rgba(220,38,38,0.10)' } },
-      { id: 'wwm-bp-premium',  title: 'Premium Battle Pass', price: 440_000, badge: 'PREMIUM',  badgeClass: 'alt2', icon: '⭐',
-        media: { from: 'rgba(245,158,11,0.35)', to: 'rgba(124,58,237,0.10)' } },
-      { id: 'wwm-monthly',     title: 'Monthly Fund',        price: 110_000, badge: '30 NGÀY',  badgeClass: 'alt',  icon: '📅', suffix: '/tháng',
-        media: { from: 'rgba(124,58,237,0.20)', to: 'rgba(56,189,248,0.10)' } },
-      { id: 'wwm-echo-180',    title: '180 Echo Beads',      price: 75_000,    icon: '💎',
-        media: { from: 'rgba(56,189,248,0.15)', to: 'rgba(124,58,237,0.05)' } },
-      { id: 'wwm-echo-300',    title: '300 Echo Beads',      price: 110_000,   icon: '💎',
-        media: { from: 'rgba(56,189,248,0.18)', to: 'rgba(124,58,237,0.08)' } },
-      { id: 'wwm-echo-600',    title: '600 Echo Beads',      price: 220_000,   icon: '💎',
-        media: { from: 'rgba(56,189,248,0.20)', to: 'rgba(124,58,237,0.10)' } },
-      { id: 'wwm-echo-900',    title: '900 Echo Beads',      price: 330_000,   icon: '💎',
-        media: { from: 'rgba(56,189,248,0.22)', to: 'rgba(124,58,237,0.12)' } },
-      { id: 'wwm-echo-1800',   title: '1800 Echo Beads',     price: 650_000,   icon: '💎',
-        media: { from: 'rgba(0,245,160,0.20)', to: 'rgba(56,189,248,0.10)' } },
-      { id: 'wwm-echo-3000',   title: '3000 Echo Beads',     price: 1_010_000, priceHigh: 1_060_000, icon: '💎',
-        media: { from: 'rgba(0,245,160,0.22)', to: 'rgba(124,58,237,0.12)' } },
-      { id: 'wwm-echo-6000',   title: '6000 Echo Beads',     price: 1_980_000, priceHigh: 2_100_000, icon: '💎',
-        media: { from: 'rgba(0,245,160,0.25)', to: 'rgba(124,58,237,0.15)' } },
-      { id: 'wwm-echo-12000',  title: '12000 Echo Beads',    price: 3_900_000, priceHigh: 4_150_000, icon: '💎', badge: 'TOP',
-        media: { from: 'rgba(245,158,11,0.20)', to: 'rgba(0,245,160,0.15)' } }
+      { id: 'wwm-bp',          title: 'Battle Pass',         price: 220_000, badge: 'BP',       imageUrl: 'wwm_bp.jpg',       icon: '🎖️' },
+      { id: 'wwm-bp-premium',  title: 'Premium Battle Pass', price: 440_000, badge: 'PREMIUM',  badgeClass: 'alt2', imageUrl: 'wwm_premium.jpg', icon: '⭐' },
+      { id: 'wwm-monthly',     title: 'Monthly Fund',        price: 110_000, badge: '30 NGÀY',  badgeClass: 'alt',  imageUrl: 'wwm_monthly.jpg', icon: '📅', suffix: '/tháng' },
+      { id: 'wwm-echo-180',    title: '180 Echo Beads',      price: 75_000,    imageUrl: 'wwm_180.jpg',   icon: '💎' },
+      { id: 'wwm-echo-300',    title: '300 Echo Beads',      price: 110_000,   imageUrl: 'wwm_300.jpg',   icon: '💎' },
+      { id: 'wwm-echo-600',    title: '600 Echo Beads',      price: 220_000,   imageUrl: 'wwm_600.jpg',   icon: '💎' },
+      { id: 'wwm-echo-900',    title: '900 Echo Beads',      price: 330_000,   imageUrl: 'wwm_900.jpg',   icon: '💎' },
+      { id: 'wwm-echo-1800',   title: '1800 Echo Beads',     price: 650_000,   imageUrl: 'wwm_1800.jpg',  icon: '💎' },
+      { id: 'wwm-echo-3000',   title: '3000 Echo Beads',     price: 1_010_000, priceHigh: 1_060_000, imageUrl: 'wwm_3000.jpg',  icon: '💎' },
+      { id: 'wwm-echo-6000',   title: '6000 Echo Beads',     price: 1_980_000, priceHigh: 2_100_000, imageUrl: 'wwm_6000.jpg',  icon: '💎' },
+      { id: 'wwm-echo-12000',  title: '12000 Echo Beads',    price: 3_900_000, priceHigh: 4_150_000, imageUrl: 'wwm_12000.jpg', icon: '💎', badge: 'TOP' }
     ];
 
     // Tier boundaries inclusive-lower, exclusive-upper. $100 sits in the
@@ -1332,22 +1360,22 @@
       }
 
       els.cardsGrid.innerHTML = list.map(p => {
-        const mediaMarkup = p.imageUrl
-          ? `<div class="card-media">
-               <img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.title)}"
-                    onerror="this.parentElement.remove()" loading="lazy" />
-             </div>`
+        // card-media is always rendered; gradient is the backdrop and the
+        // image (if any) overlays it. If the image fails, only the <img>
+        // removes — gradient stays visible so the card never looks broken.
+        const imgMarkup = p.imageUrl
+          ? `<img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.title)}"
+                  onerror="this.remove()" loading="lazy" />`
           : '';
         const badgeMarkup = p.badge
           ? `<span class="card-badge ${p.badgeClass || ''}">${escapeHtml(p.badge)}</span>`
           : '';
         return `
           <article class="card">
-            ${mediaMarkup}
+            <div class="card-media">${imgMarkup}</div>
             ${badgeMarkup}
             <div class="card-body">
               <h3 class="card-title">${escapeHtml(p.title)}</h3>
-              <div class="card-divider"></div>
               <div class="card-price-row">
                 <div>
                   ${priceDisplay(p)}
