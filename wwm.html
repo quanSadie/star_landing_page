@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StarTran Store</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+    :root {
+      --primary: #00f5a0;
+      --primary-dark: #00c97c;
+      --accent: #7c3aed;
+      --accent2: #f59e0b;
+      --accent3: #38bdf8;
+      --bg: #0a0a0f;
+      --card-bg: #16161f;
+      --card-bg-2: #1c1c28;
+      --card-border: #2a2a3a;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      /* Tech-style headlines that also handle Vietnamese diacritics cleanly.
+         Use instead of Orbitron whenever the text isn't pure digits. */
+      --font-tech: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(124, 58, 237, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(0, 245, 160, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 50px 20px 36px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,245,160,0.06);
+      border: 1px solid rgba(0,245,160,0.2);
+      border-radius: 50px;
+      padding: 6px 16px;
+      font-size: 11px;
+      color: var(--primary);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .logo-badge::before { content: '●'; font-size: 8px; animation: blink 1.5s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    header h1 {
+      font-family: var(--font-tech);
+      font-size: clamp(26px, 5vw, 44px);
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+      margin-bottom: 14px;
+    }
+
+    header h1 span {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header p.subtitle {
+      color: var(--text-muted);
+      font-size: 15px;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ─── TABS ─── */
+    .tab-nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+      background: rgba(10,10,15,0.85);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 12px 22px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+      border-color: rgba(0,245,160,0.2);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(0,245,160,0.1), rgba(124,58,237,0.06));
+      border-color: rgba(0,245,160,0.35);
+      color: var(--primary);
+    }
+
+    /* Tab icon base size. Without this rule, imgs render at their native source
+       size (wind=100px, others=48px) which makes WWM huge. */
+    .tab-icon {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    /* The "clouds" style on icons8 has soft padding inside the source canvas,
+       so the wind icon visually reads ~30% smaller than tight "color" / "liquid-glass"
+       icons at the same px. Bump to compensate. */
+    .tab-btn[data-tab="wwm"] .tab-icon { width: 30px; height: 30px; }
+
+    .tab-panel { position: relative; z-index: 10; }
+    .tab-panel[hidden] { display: none; }
+
+    /* ─── GAME BANNER (per-tab hero) ─── */
+    .game-banner {
+      max-width: 1200px;
+      margin: 36px auto 0;
+      padding: 0 20px;
+    }
+
+    .game-banner-inner {
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      border: 1px solid var(--card-border);
+      padding: 36px 32px;
+      background: var(--card-bg);
+    }
+
+    .game-banner-inner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--banner-grad, linear-gradient(135deg, rgba(0,245,160,0.08), rgba(124,58,237,0.04)));
+      z-index: 0;
+    }
+
+    .game-banner-inner > * { position: relative; z-index: 1; }
+
+    .game-banner-eyebrow {
+      font-family: var(--font-tech);
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--banner-accent, var(--primary));
+      margin-bottom: 10px;
+    }
+
+    .game-banner h2 {
+      font-family: var(--font-tech);
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+    }
+
+    .game-banner p {
+      color: var(--text-muted);
+      font-size: 15px;
+      max-width: 680px;
+      line-height: 1.6;
+    }
+
+    /* theme-wwm has a real background image — stronger dark scrim on the left
+       (where the text sits) for legibility, fading right to let the image breathe. */
+    .game-banner.theme-wwm {
+      --banner-grad:
+        linear-gradient(135deg, rgba(245,158,11,0.18), rgba(220,38,38,0.08)),
+        linear-gradient(to right, rgba(10,10,15,0.88) 0%, rgba(10,10,15,0.55) 55%, rgba(10,10,15,0.30) 100%);
+      --banner-accent: var(--accent2);
+    }
+    .game-banner.theme-wwm .game-banner-inner {
+      background-image: url('wwm_bg.jpg');
+      background-size: cover;
+      background-position: center;
+      min-height: 220px;
+    }
+    .game-banner.theme-wuwa {
+      --banner-grad:
+        linear-gradient(135deg, rgba(0,245,160,0.15), rgba(124,58,237,0.08)),
+        linear-gradient(to right, rgba(10,10,15,0.88) 0%, rgba(10,10,15,0.55) 55%, rgba(10,10,15,0.30) 100%);
+      --banner-accent: var(--primary);
+    }
+    .game-banner.theme-wuwa .game-banner-inner {
+      background-image: url('wuwa_bg.jpg');
+      background-size: cover;
+      background-position: center;
+      min-height: 220px;
+    }
+
+    .game-banner.theme-steam {
+      --banner-grad:
+        linear-gradient(135deg, rgba(56,189,248,0.15), rgba(30,64,175,0.08)),
+        linear-gradient(to right, rgba(10,10,15,0.88) 0%, rgba(10,10,15,0.55) 55%, rgba(10,10,15,0.30) 100%);
+      --banner-accent: var(--accent3);
+    }
+    .game-banner.theme-steam .game-banner-inner {
+      background-image: url('steam_bg.jpg');
+      background-size: cover;
+      background-position: center;
+      min-height: 220px;
+    }
+
+    /* ─── WWM tab — cổ trang / wuxia typography
+       Cinzel for the English title (Roman classical inscription feel),
+       Cormorant Garamond for Vietnamese body text (elegant serif with VN diacritics).
+       Scoped only to the WWM panel — other tabs stay modern sans. */
+    [data-panel="wwm"] {
+      font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    }
+    [data-panel="wwm"] .game-banner h2 {
+      font-family: 'Cinzel', 'Cormorant Garamond', serif;
+      font-weight: 600;
+      letter-spacing: 2px;
+    }
+    [data-panel="wwm"] .game-banner-eyebrow {
+      font-family: 'Cinzel', 'Cormorant Garamond', serif;
+      font-weight: 400;
+      letter-spacing: 4px;
+    }
+    [data-panel="wwm"] .game-banner p {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 17px;
+      font-style: italic;
+      font-weight: 400;
+      line-height: 1.65;
+    }
+    [data-panel="wwm"] .card-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-weight: 600;
+      font-size: 19px;
+      letter-spacing: 0.2px;
+    }
+    [data-panel="wwm"] .card-badge {
+      font-family: 'Cinzel', 'Cormorant Garamond', serif;
+      font-weight: 600;
+      letter-spacing: 2px;
+    }
+    [data-panel="wwm"] .placeholder-state h3 {
+      font-family: 'Cinzel', 'Cormorant Garamond', serif;
+      letter-spacing: 2px;
+    }
+    /* Keep utility chrome on Inter so controls feel snappy/modern */
+    [data-panel="wwm"] #searchInput,
+    [data-panel="wwm"] #sortSelect,
+    [data-panel="wwm"] .price-label {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+    /* Numbers stay Orbitron for visual rhythm with other tabs */
+    [data-panel="wwm"] .price-value,
+    [data-panel="wwm"] .price-range {
+      font-family: 'Orbitron', monospace;
+    }
+
+    /* ─── ANNOUNCEMENT NOTICE ─── */
+    .notice {
+      max-width: 1200px;
+      margin: 16px auto 0;
+      padding: 0 20px;
+    }
+
+    .notice-inner {
+      background: rgba(245,158,11,0.05);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 14px;
+      padding: 14px 20px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .notice-inner .notice-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .notice-inner strong { color: var(--accent2); }
+    .notice-inner code {
+      background: rgba(255,255,255,0.06);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    /* ─── CONTROLS ─── */
+    .controls {
+      max-width: 1200px;
+      margin: 24px auto 0;
+      padding: 0 20px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-wrapper {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+
+    .search-wrapper::before {
+      content: '🔍';
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    #searchInput, #sortSelect {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #searchInput { width: 100%; padding-left: 40px; }
+    #sortSelect { cursor: pointer; }
+    #searchInput:focus, #sortSelect:focus { border-color: var(--primary); }
+
+    /* ─── CARDS GRID ─── */
+    #cards-grid {
+      max-width: 1200px;
+      margin: 24px auto 60px;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.25s ease, border-color 0.25s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(0,245,160,0.25);
+    }
+
+    /* Only rendered when a product has imageUrl. No gradient fallback —
+       cards without images skip the media area entirely (cleaner look). */
+    .card-media {
+      position: relative;
+      height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .card-media img {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 12px; right: 12px;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0,245,160,0.3);
+      color: var(--primary);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .card-badge.alt {
+      border-color: rgba(124,58,237,0.4);
+      color: #c4b5fd;
+    }
+
+    .card-badge.alt2 {
+      border-color: rgba(245,158,11,0.4);
+      color: var(--accent2);
+    }
+
+    .card-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      /* Leave room for floating badge at top-right of card */
+      padding-right: 70px;
+    }
+
+    .card-divider {
+      height: 1px;
+      background: linear-gradient(90deg, var(--card-border), transparent);
+    }
+
+    .card-price-row {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .price-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .price-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .price-range {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1.3;
+    }
+
+    .price-suffix {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-weight: 500;
+    }
+
+    .placeholder-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .placeholder-state .ph-icon {
+      font-size: 48px;
+      margin-bottom: 14px;
+      display: block;
+      opacity: 0.4;
+    }
+
+    /* ─── TOP-UP CALCULATOR (WW) ─── */
+    .topup-wrap {
+      max-width: 1200px;
+      margin: 24px auto 60px;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .topup-wrap { grid-template-columns: 1fr; }
+    }
+
+    .topup-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .topup-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+
+    .topup-eyebrow {
+      font-family: var(--font-tech);
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .topup-title {
+      font-family: var(--font-tech);
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .topup-desc {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    .topup-field { margin-bottom: 18px; }
+
+    .topup-field-label {
+      display: block;
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .usd-input-row { position: relative; }
+
+    #usdInput {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px 60px 16px 18px;
+      color: var(--text);
+      font-family: 'Orbitron', monospace;
+      font-size: 24px;
+      font-weight: 700;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #usdInput:focus { border-color: var(--primary); }
+
+    .usd-suffix {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: 'Orbitron', monospace;
+      font-size: 20px;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .usd-quick {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .usd-quick button {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .usd-quick button:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .topup-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: rgba(245,158,11,0.05);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 10px;
+      margin-bottom: 24px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .topup-toggle input[type=checkbox] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent2);
+      cursor: pointer;
+    }
+
+    .topup-toggle .toggle-label {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .topup-toggle .toggle-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .rate-applied {
+      background: rgba(0,245,160,0.04);
+      border: 1px solid rgba(0,245,160,0.2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .rate-applied strong {
+      color: var(--primary);
+      font-family: 'Orbitron', monospace;
+      font-size: 14px;
+    }
+
+    .vnd-output {
+      background: linear-gradient(135deg, rgba(0,245,160,0.06), rgba(124,58,237,0.04));
+      border: 1px solid rgba(0,245,160,0.25);
+      border-radius: 14px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .vnd-output-label {
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .vnd-output-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--primary);
+      text-shadow: 0 0 24px rgba(0,245,160,0.3);
+      line-height: 1.1;
+    }
+
+    .vnd-output-sub {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--text-subtle);
+    }
+
+    .rate-table {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px;
+      align-self: start;
+    }
+
+    .rate-table h3 {
+      font-family: var(--font-tech);
+      font-size: 13px;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .rate-row {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr 1fr;
+      padding: 11px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      align-items: center;
+      gap: 12px;
+    }
+
+    .rate-row:last-of-type { border-bottom: 0; }
+
+    .rate-row.header {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--text-subtle);
+      text-transform: uppercase;
+      padding-bottom: 8px;
+    }
+
+    .rate-row.active {
+      background: rgba(0,245,160,0.06);
+      margin: 0 -12px;
+      padding: 11px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,245,160,0.25);
+    }
+
+    .rate-row .tier-label { font-weight: 700; font-size: 14px; }
+    .rate-row .tier-rate {
+      font-family: 'Orbitron', monospace;
+      font-size: 15px;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .rate-row .tier-rate-day {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      color: var(--accent2);
+      font-weight: 700;
+    }
+
+    .rate-note {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--card-border);
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .rate-note strong { color: var(--accent2); }
+
+    /* ─── STEAM SECTIONS ─── */
+    .steam-wrap {
+      max-width: 1100px;
+      margin: 24px auto 60px;
+      padding: 0 20px;
+    }
+
+    .country-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 24px 28px;
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .country-section::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+      background: var(--country-color, var(--accent3));
+    }
+
+    .country-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+
+    .country-flag {
+      width: 32px;
+      height: 22px;
+      border-radius: 3px;
+      object-fit: cover;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    .country-flag-fallback {
+      width: 32px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--card-bg-2);
+      border-radius: 3px;
+      font-size: 18px;
+    }
+
+    .country-name {
+      font-family: var(--font-tech);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .country-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .country-note {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      line-height: 1.6;
+    }
+
+    .country-rates {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .country-rate-pill {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .country-rate-pill .pill-amount {
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .country-rate-pill .pill-rate {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 14px;
+    }
+
+    .country-rate-pill .pill-rate-secondary {
+      color: var(--accent2);
+      font-size: 12px;
+      margin-left: 4px;
+    }
+
+    .country-rate-pill .pill-wait {
+      font-size: 10px;
+      color: var(--text-subtle);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 28px 20px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    footer code {
+      background: rgba(255,255,255,0.06);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--primary);
+    }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(0,245,160,0.2); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0,245,160,0.4); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <a class="logo-badge" href="https://discord.gg/BU9yqUnzbg" target="_blank" rel="noopener noreferrer">Discord</a>
+      <a class="logo-badge" href="https://www.facebook.com/duong.tranbinh.3" target="_blank" rel="noopener noreferrer">Facebook</a></div>
+    <h1>StarTran store — <span>uy tín, giá tốt</span></h1>
+  </header>
+
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="wwm"><img class="tab-icon" src="https://img.icons8.com/clouds/100/wind.png" alt="" /> Where Winds Meet</button>
+    <button class="tab-btn" data-tab="wuwa"><img class="tab-icon" src="https://img.icons8.com/color/48/water-element.png" alt="" /> Wuthering Waves</button>
+    <button class="tab-btn" data-tab="steam"><img class="tab-icon" src="https://img.icons8.com/liquid-glass/48/steam.png" alt="" /> Steam</button>
+  </nav>
+
+  <!-- ════════════════════════════════════════════════════════
+       TAB 1 · WHERE WINDS MEET
+       ════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" data-panel="wwm">
+    <section class="game-banner theme-wwm">
+      <div class="game-banner-inner">
+        <div class="game-banner-eyebrow">Game · Open-world wuxia</div>
+        <h2>Where Winds Meet</h2>
+        <p>
+          Battle Pass, Premium BP, Monthly Fund, và các gói Echo Beads từ 180 đến 12.000.
+          Giá cố định — gói lớn từ 3.000 Beads.
+        </p>
+      </div>
+    </section>
+
+    <div class="controls">
+      <div class="search-wrapper">
+        <input type="text" id="searchInput" placeholder="Tìm gói (Battle Pass, Echo Beads, ...)" />
+      </div>
+      <select id="sortSelect">
+        <option value="default">Sắp xếp: Mặc định</option>
+        <option value="price-asc">Giá: Thấp → Cao</option>
+        <option value="price-desc">Giá: Cao → Thấp</option>
+        <option value="name-asc">Tên: A → Z</option>
+        <option value="name-desc">Tên: Z → A</option>
+      </select>
+    </div>
+
+    <div id="cards-grid"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       TAB 2 · WUTHERING WAVES
+       ════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" data-panel="wuwa" hidden>
+    <section class="game-banner theme-wuwa">
+      <div class="game-banner-inner">
+        <div class="game-banner-eyebrow">Game · Open-world action</div>
+        <h2>Wuthering Waves</h2>
+        <p>
+          Nạp ingame theo số USD bạn cần. Càng nạp nhiều, rate càng tốt. Nạp trong ngày cộng thêm 0.3 vào rate.
+        </p>
+      </div>
+    </section>
+
+    <div class="notice">
+      <div class="notice-inner">
+        <span class="notice-icon">⚠️</span>
+        <div>
+          <strong>Cần tài khoản game Wuthering Waves để nạp.</strong>
+          Rate cập nhật ngày <strong>07/05/2026</strong>.
+        </div>
+      </div>
+    </div>
+
+    <div class="topup-wrap">
+      <div class="topup-card">
+        <div class="topup-eyebrow">Calculator tham khảo</div>
+        <h3 class="topup-title">Nạp theo USD ingame</h3>
+        <p class="topup-desc">
+          Nhập số USD bạn muốn nạp để xem giá VND tương ứng theo bậc rate bên cạnh.
+          Khi chốt đơn trong Discord ticket, rate sẽ confirm lại theo thời điểm.
+        </p>
+
+        <div class="topup-field">
+          <label class="topup-field-label">Số USD muốn nạp</label>
+          <div class="usd-input-row">
+            <input type="number" id="usdInput" placeholder="0" min="0" step="1" inputmode="decimal" />
+            <span class="usd-suffix">$</span>
+          </div>
+          <div class="usd-quick">
+            <button type="button" data-usd="10">$10</button>
+            <button type="button" data-usd="30">$30</button>
+            <button type="button" data-usd="50">$50</button>
+            <button type="button" data-usd="100">$100</button>
+            <button type="button" data-usd="200">$200</button>
+            <button type="button" data-usd="500">$500</button>
+          </div>
+        </div>
+
+        <label class="topup-toggle" for="sameDayToggle">
+          <input type="checkbox" id="sameDayToggle" />
+          <span class="toggle-label">Nạp trong ngày</span>
+          <span class="toggle-hint">+0.3 mỗi rate</span>
+        </label>
+
+        <div class="rate-applied">
+          <span>Rate áp dụng</span>
+          <strong id="rateAppliedValue">— nhập USD —</strong>
+        </div>
+
+        <div class="vnd-output">
+          <div class="vnd-output-label">Tổng tiền VND</div>
+          <div class="vnd-output-value" id="vndOutputValue">0 ₫</div>
+          <div class="vnd-output-sub" id="vndOutputSub">Nhập USD để tính tự động</div>
+        </div>
+      </div>
+
+      <div class="rate-table">
+        <h3>Bảng tỷ giá Wuthering Waves</h3>
+        <div class="rate-row header">
+          <div>Mức nạp</div>
+          <div>Rate</div>
+          <div>Trong ngày</div>
+        </div>
+        <div class="rate-row" data-tier="0">
+          <div class="tier-label">1 – 19 $</div>
+          <div class="tier-rate">22.0</div>
+          <div class="tier-rate-day">22.3</div>
+        </div>
+        <div class="rate-row" data-tier="1">
+          <div class="tier-label">20 – 49 $</div>
+          <div class="tier-rate">21.0</div>
+          <div class="tier-rate-day">21.3</div>
+        </div>
+        <div class="rate-row" data-tier="2">
+          <div class="tier-label">50 – 99 $</div>
+          <div class="tier-rate">20.5</div>
+          <div class="tier-rate-day">20.8</div>
+        </div>
+        <div class="rate-row" data-tier="3">
+          <div class="tier-label">100 – 299 $</div>
+          <div class="tier-rate">20.0</div>
+          <div class="tier-rate-day">20.3</div>
+        </div>
+        <div class="rate-row" data-tier="4">
+          <div class="tier-label">Từ 300 $</div>
+          <div class="tier-rate">19.8</div>
+          <div class="tier-rate-day">20.1</div>
+        </div>
+        <p class="rate-note">
+          <strong>Cách tính:</strong> tổng VND = USD × rate × 1.000.
+          Ví dụ $50 với rate 20.5 = 50 × 20.5 × 1.000 = 1.025.000 đ.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       TAB 3 · STEAM
+       ════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" data-panel="steam" hidden>
+    <section class="game-banner theme-steam">
+      <div class="game-banner-inner">
+        <div class="game-banner-eyebrow">Platform · Steam wallet</div>
+        <h2>Nạp ví Steam — US/VN/UKR</h2>
+        <p>
+          Nạp ví Steam qua các kênh US, VN, UA. Rate khác nhau tùy quốc gia và thời gian chờ —
+          quốc gia nào nhanh thì rate cao hơn. Chốt đơn qua Discord ticket, mình tư vấn cụ thể.
+        </p>
+      </div>
+    </section>
+
+    <div class="notice">
+      <div class="notice-inner">
+        <span class="notice-icon">📢</span>
+        <div>
+          Steam Ukraine chỉ nhận đơn từ <strong>$50</strong> trở lên.
+        </div>
+      </div>
+    </div>
+
+    <div class="steam-wrap">
+      <!-- USA -->
+      <div class="country-section" style="--country-color: #ef4444;">
+        <div class="country-header">
+          <img class="country-flag" src="https://flagcdn.com/w80/us.png" alt="USA"
+               onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'country-flag-fallback',textContent:'🇺🇸'}))">
+          <div>
+            <div class="country-name">Steam US</div>
+            <div class="country-meta">Nạp chậm</div>
+          </div>
+        </div>
+        <p class="country-note">
+          Mức nhỏ giao trong ngày. Mức từ $300 trở lên cần chờ <strong>1–4 ngày</strong> (giá tốt hơn).
+        </p>
+        <div class="country-rates">
+          <div class="country-rate-pill"><div><span class="pill-amount">$20+</span><span class="pill-wait">trong ngày</span></div><span class="pill-rate">21.5</span></div>
+          <div class="country-rate-pill"><div><span class="pill-amount">$50+</span><span class="pill-wait">trong ngày</span></div><span class="pill-rate">21.0</span></div>
+          <div class="country-rate-pill"><div><span class="pill-amount">$100+</span><span class="pill-wait">trong ngày</span></div><span class="pill-rate">20.5</span></div>
+          <div class="country-rate-pill"><div><span class="pill-amount">$300+</span><span class="pill-wait">1–4 ngày</span></div><span class="pill-rate">20.0</span></div>
+          <div class="country-rate-pill"><div><span class="pill-amount">$500+</span><span class="pill-wait">1–4 ngày</span></div><span class="pill-rate">19.8</span></div>
+        </div>
+      </div>
+
+      <!-- VN -->
+      <div class="country-section" style="--country-color: var(--accent2);">
+        <div class="country-header">
+          <img class="country-flag" src="https://flagcdn.com/w80/vn.png" alt="VN"
+               onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'country-flag-fallback',textContent:'🇻🇳'}))">
+          <div>
+            <div class="country-name">Steam VN</div>
+            <div class="country-meta">Chậm · 1–7 ngày</div>
+          </div>
+        </div>
+        <p class="country-note">
+          Rate VN luôn cao nhất (vì lâu nhất). Phù hợp khi không vội, muốn tối đa giá trị nạp.
+        </p>
+        <div class="country-rates">
+          <div class="country-rate-pill"><div><span class="pill-amount">$50 – 100</span><span class="pill-wait">1–7 ngày</span></div><span class="pill-rate">23.0</span></div>
+          <div class="country-rate-pill"><div><span class="pill-amount">$200+</span><span class="pill-wait">1–7 ngày</span></div><span class="pill-rate">22.0</span></div>
+          <div class="country-rate-pill"><div><span class="pill-amount">$300+</span><span class="pill-wait">1–7 ngày</span></div><span class="pill-rate">21.5</span></div>
+        </div>
+      </div>
+
+      <!-- UA -->
+      <div class="country-section" style="--country-color: var(--accent3);">
+        <div class="country-header">
+          <img class="country-flag" src="https://flagcdn.com/w80/ua.png" alt="UA"
+               onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'country-flag-fallback',textContent:'🇺🇦'}))">
+          <div>
+            <div class="country-name">Steam Ukraine</div>
+            <div class="country-meta">Nhanh hoặc chậm — bạn chọn</div>
+          </div>
+        </div>
+        <p class="country-note">
+          Mức $50 và $100 có 2 mức rate: <strong>nhanh (trong ngày)</strong> hoặc <strong>chậm (lâu hơn, rate cao hơn)</strong>.
+          Từ $300 trở lên rate cố định, chờ 1–4 ngày. <strong>Min đơn: $50.</strong>
+        </p>
+        <div class="country-rates">
+          <div class="country-rate-pill">
+            <div><span class="pill-amount">$50+</span><span class="pill-wait">nhanh / chậm</span></div>
+            <span class="pill-rate">22.5 <span class="pill-rate-secondary">→ 21.0</span></span>
+          </div>
+          <div class="country-rate-pill">
+            <div><span class="pill-amount">$100+</span><span class="pill-wait">nhanh / chậm</span></div>
+            <span class="pill-rate">22.0 <span class="pill-rate-secondary">→ 20.7</span></span>
+          </div>
+          <div class="country-rate-pill"><div><span class="pill-amount">$300+</span><span class="pill-wait">1–4 ngày</span></div><span class="pill-rate">20.0</span></div>
+          <div class="country-rate-pill"><div><span class="pill-amount">$500+</span><span class="pill-wait">1–4 ngày</span></div><span class="pill-rate">19.8</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Mọi chi tiết vui lòng liên hệ qua <a style="color: green;" href="https://discord.gg/BU9yqUnzbg" target="_blank" rel="noopener noreferrer">Discord</a> hoặc <a style="color: green" href="https://www.facebook.com/duong.tranbinh.3" target="_blank" rel="noopener noreferrer">Facebook</a>.
+  </footer>
+
+  <script>
+    // ═══ HARD-CODED DATA ═══════════════════════════════════
+    // Edit ở đây khi rate đổi. `imageUrl` có thể paste URL ảnh sản phẩm
+    // (Imgur, Discord CDN, ...); để trống thì dùng emoji + gradient.
+    const WWM_PACKAGES = [
+      { id: 'wwm-bp',          title: 'Battle Pass',         price: 220_000, badge: 'BP',       icon: '🎖️',
+        media: { from: 'rgba(245,158,11,0.25)', to: 'rgba(220,38,38,0.10)' } },
+      { id: 'wwm-bp-premium',  title: 'Premium Battle Pass', price: 440_000, badge: 'PREMIUM',  badgeClass: 'alt2', icon: '⭐',
+        media: { from: 'rgba(245,158,11,0.35)', to: 'rgba(124,58,237,0.10)' } },
+      { id: 'wwm-monthly',     title: 'Monthly Fund',        price: 110_000, badge: '30 NGÀY',  badgeClass: 'alt',  icon: '📅', suffix: '/tháng',
+        media: { from: 'rgba(124,58,237,0.20)', to: 'rgba(56,189,248,0.10)' } },
+      { id: 'wwm-echo-180',    title: '180 Echo Beads',      price: 75_000,    icon: '💎',
+        media: { from: 'rgba(56,189,248,0.15)', to: 'rgba(124,58,237,0.05)' } },
+      { id: 'wwm-echo-300',    title: '300 Echo Beads',      price: 110_000,   icon: '💎',
+        media: { from: 'rgba(56,189,248,0.18)', to: 'rgba(124,58,237,0.08)' } },
+      { id: 'wwm-echo-600',    title: '600 Echo Beads',      price: 220_000,   icon: '💎',
+        media: { from: 'rgba(56,189,248,0.20)', to: 'rgba(124,58,237,0.10)' } },
+      { id: 'wwm-echo-900',    title: '900 Echo Beads',      price: 330_000,   icon: '💎',
+        media: { from: 'rgba(56,189,248,0.22)', to: 'rgba(124,58,237,0.12)' } },
+      { id: 'wwm-echo-1800',   title: '1800 Echo Beads',     price: 650_000,   icon: '💎',
+        media: { from: 'rgba(0,245,160,0.20)', to: 'rgba(56,189,248,0.10)' } },
+      { id: 'wwm-echo-3000',   title: '3000 Echo Beads',     price: 1_010_000, priceHigh: 1_060_000, icon: '💎',
+        media: { from: 'rgba(0,245,160,0.22)', to: 'rgba(124,58,237,0.12)' } },
+      { id: 'wwm-echo-6000',   title: '6000 Echo Beads',     price: 1_980_000, priceHigh: 2_100_000, icon: '💎',
+        media: { from: 'rgba(0,245,160,0.25)', to: 'rgba(124,58,237,0.15)' } },
+      { id: 'wwm-echo-12000',  title: '12000 Echo Beads',    price: 3_900_000, priceHigh: 4_150_000, icon: '💎', badge: 'TOP',
+        media: { from: 'rgba(245,158,11,0.20)', to: 'rgba(0,245,160,0.15)' } }
+    ];
+
+    // Tier boundaries inclusive-lower, exclusive-upper. $100 sits in the
+    // 100–299 tier (cheaper rate), so $100 isn't more expensive than $101.
+    const WUWA_TIERS = [
+      { min: 1,    max: 20,       label: '1 – 19 $',    rate: 22.0 },
+      { min: 20,   max: 50,       label: '20 – 49 $',   rate: 21.0 },
+      { min: 50,   max: 100,      label: '50 – 99 $',   rate: 20.5 },
+      { min: 100,  max: 300,      label: '100 – 299 $', rate: 20.0 },
+      { min: 300,  max: Infinity, label: 'Từ 300 $',    rate: 19.8 }
+    ];
+    const SAME_DAY_BONUS = 0.3;
+
+    // ═══ State ═══════════════════════════════════════════
+    const $ = id => document.getElementById(id);
+    const els = {
+      tabBtns: document.querySelectorAll('.tab-btn'),
+      tabPanels: document.querySelectorAll('.tab-panel'),
+      cardsGrid: $('cards-grid'),
+      searchInput: $('searchInput'),
+      sortSelect: $('sortSelect'),
+      usdInput: $('usdInput'),
+      sameDayToggle: $('sameDayToggle'),
+      rateAppliedValue: $('rateAppliedValue'),
+      vndOutputValue: $('vndOutputValue'),
+      vndOutputSub: $('vndOutputSub'),
+      rateRows: document.querySelectorAll('.rate-row[data-tier]'),
+      usdQuickBtns: document.querySelectorAll('.usd-quick button')
+    };
+
+    // ═══ Helpers ═════════════════════════════════════════
+    const fmt = n => new Intl.NumberFormat('vi-VN').format(Math.round(n));
+    const formatVnd = n => fmt(n) + ' ₫';
+    const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+
+    function priceDisplay(p) {
+      if (p.priceHigh && p.priceHigh > p.price) {
+        return `<span class="price-range">${fmt(p.price)} – ${fmt(p.priceHigh)} ₫</span>`;
+      }
+      return `<span class="price-value">${formatVnd(p.price)}</span>${p.suffix ? `<span class="price-suffix"> ${p.suffix}</span>` : ''}`;
+    }
+
+    // ═══ Tab switching ═══════════════════════════════════
+    els.tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        els.tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+        els.tabPanels.forEach(p => p.hidden = p.dataset.panel !== tab);
+        window.scrollTo({ top: document.querySelector('.tab-nav').offsetTop - 16, behavior: 'smooth' });
+      });
+    });
+
+    // ═══ WWM packages render ═════════════════════════════
+    function renderPackages() {
+      const q = els.searchInput.value.trim().toLowerCase();
+      let list = WWM_PACKAGES.filter(p => p.title.toLowerCase().includes(q));
+
+      switch (els.sortSelect.value) {
+        case 'price-asc':  list.sort((a,b) => a.price - b.price); break;
+        case 'price-desc': list.sort((a,b) => b.price - a.price); break;
+        case 'name-asc':   list.sort((a,b) => a.title.localeCompare(b.title, 'vi')); break;
+        case 'name-desc':  list.sort((a,b) => b.title.localeCompare(a.title, 'vi')); break;
+      }
+
+      if (list.length === 0) {
+        els.cardsGrid.innerHTML = `
+          <div class="placeholder-state">
+            <span class="ph-icon">🔍</span>
+            <h3>Không tìm thấy</h3>
+            <p>Thử từ khoá khác</p>
+          </div>`;
+        return;
+      }
+
+      els.cardsGrid.innerHTML = list.map(p => {
+        const mediaMarkup = p.imageUrl
+          ? `<div class="card-media">
+               <img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.title)}"
+                    onerror="this.parentElement.remove()" loading="lazy" />
+             </div>`
+          : '';
+        const badgeMarkup = p.badge
+          ? `<span class="card-badge ${p.badgeClass || ''}">${escapeHtml(p.badge)}</span>`
+          : '';
+        return `
+          <article class="card">
+            ${mediaMarkup}
+            ${badgeMarkup}
+            <div class="card-body">
+              <h3 class="card-title">${escapeHtml(p.title)}</h3>
+              <div class="card-divider"></div>
+              <div class="card-price-row">
+                <div>
+                  ${priceDisplay(p)}
+                </div>
+              </div>
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    els.searchInput.addEventListener('input', renderPackages);
+    els.sortSelect.addEventListener('change', renderPackages);
+    renderPackages();
+
+    // ═══ Wuwa calculator (display-only — no submit) ══════
+    function calcTier(usd) {
+      if (!isFinite(usd) || usd <= 0) return null;
+      // usd >= min && usd < max — round numbers (20, 50, 100, 300) belong to
+      // the next (cheaper) tier, not the previous one.
+      return WUWA_TIERS.find(t => usd >= t.min && usd < t.max) ?? WUWA_TIERS[WUWA_TIERS.length - 1];
+    }
+
+    function highlightTier(tierIdx) {
+      els.rateRows.forEach((row, i) => row.classList.toggle('active', i === tierIdx));
+    }
+
+    function updateTopup() {
+      const usd = parseFloat(els.usdInput.value);
+      const sameDay = els.sameDayToggle.checked;
+
+      if (!isFinite(usd) || usd <= 0) {
+        els.rateAppliedValue.textContent = '— nhập USD —';
+        els.vndOutputValue.textContent = '0 ₫';
+        els.vndOutputSub.textContent = 'Nhập USD để tính tự động';
+        highlightTier(-1);
+        return;
+      }
+
+      const tier = calcTier(usd);
+      const tierIdx = WUWA_TIERS.indexOf(tier);
+      const rate = tier.rate + (sameDay ? SAME_DAY_BONUS : 0);
+      const vnd = usd * rate * 1000;
+
+      els.rateAppliedValue.textContent = `${rate.toFixed(1)} (${tier.label})`;
+      els.vndOutputValue.textContent = formatVnd(vnd);
+      els.vndOutputSub.textContent =
+        `${usd}$ × ${rate.toFixed(1)} × 1.000 = ${formatVnd(vnd)}${sameDay ? ' · giao trong ngày' : ''}`;
+      highlightTier(tierIdx);
+    }
+
+    els.usdInput.addEventListener('input', updateTopup);
+    els.sameDayToggle.addEventListener('change', updateTopup);
+    els.usdQuickBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        els.usdInput.value = btn.dataset.usd;
+        updateTopup();
+        els.usdInput.focus();
+      });
+    });
+  </script>
+</body>
+</html>
