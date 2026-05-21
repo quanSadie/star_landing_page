@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="https://img.icons8.com/clouds/100/wind.png" />
+  <link rel="apple-touch-icon" href="https://img.icons8.com/clouds/100/wind.png" />
   <title>StarTran Store</title>
 
   <style>
@@ -254,8 +256,11 @@
        Cinzel for the English title (Roman classical inscription feel),
        Cormorant Garamond for Vietnamese body text (elegant serif with VN diacritics).
        Scoped only to the WWM panel — other tabs stay modern sans. */
+    /* WWM base inherits Inter for everything that isn't an explicit heading.
+       Cormorant looked elegant but Vietnamese diacritics + italic at body sizes
+       got hard to scan. Cinzel/Cormorant stay scoped to headings + badges. */
     [data-panel="wwm"] {
-      font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
     }
     [data-panel="wwm"] .game-banner h2 {
       font-family: 'Cinzel', 'Cormorant Garamond', serif;
@@ -268,18 +273,14 @@
       letter-spacing: 4px;
     }
     [data-panel="wwm"] .game-banner p {
-      font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 17px;
-      font-style: italic;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-size: 15px;
       font-weight: 400;
       line-height: 1.65;
     }
-    [data-panel="wwm"] .card-title {
-      font-family: 'Cormorant Garamond', Georgia, serif;
-      font-weight: 600;
-      font-size: 19px;
-      letter-spacing: 0.2px;
-    }
+    /* Card titles in WWM also use the base Inter styling — Cormorant looked
+       elegant but mixed numerics (e.g. "180 Echo Beads") + Vietnamese context
+       read better in sans. Only banner h2 + badges keep Cinzel character. */
     [data-panel="wwm"] .card-badge {
       font-family: 'Cinzel', 'Cormorant Garamond', serif;
       font-weight: 600;
@@ -295,10 +296,19 @@
     [data-panel="wwm"] .price-label {
       font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
     }
-    /* Numbers stay Orbitron for visual rhythm with other tabs */
-    [data-panel="wwm"] .price-value,
-    [data-panel="wwm"] .price-range {
-      font-family: 'Orbitron', monospace;
+    /* Prices in WWM panel inherit the new readable Inter-tabular base. */
+
+    /* All number displays use tabular-nums so digits line up cleanly across
+       rows and don't kerning-shift between values. Applies to calculator output,
+       rate tables, country rate pills, USD input — anywhere digits are the focus. */
+    .price-value, .price-range,
+    .vnd-output-value, .rate-applied strong,
+    .rate-row .tier-rate, .rate-row .tier-rate-day,
+    .country-rate-pill .pill-rate, .country-rate-pill .pill-rate-secondary,
+    #usdInput, .usd-suffix {
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'tnum' 1;
+      letter-spacing: -0.2px;
     }
 
     /* ─── ANNOUNCEMENT NOTICE ─── */
@@ -457,13 +467,20 @@
       flex: 1;
     }
 
+    /* Reserve 2-line height so titles like "Premium Battle Pass" that wrap
+       don't push the price row down — all cards in a row stay aligned. */
     .card-title {
-      font-size: 17px;
+      font-size: 15px;
       font-weight: 700;
       color: var(--text);
       line-height: 1.3;
-      /* Leave room for floating badge at top-right of card */
       padding-right: 70px;
+      min-height: calc(15px * 1.3 * 2);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .card-divider {
@@ -471,12 +488,16 @@
       background: linear-gradient(90deg, var(--card-border), transparent);
     }
 
+    /* margin-top: auto pushes the price row to the bottom of the card body
+       regardless of how tall the title block is. Combined with the fixed-height
+       title, every card aligns the price at the same vertical position. */
     .card-price-row {
       display: flex;
       align-items: end;
       justify-content: space-between;
       gap: 8px;
       flex-wrap: wrap;
+      margin-top: auto;
     }
 
     .price-label {
@@ -488,18 +509,29 @@
     }
 
     .price-value {
-      font-family: 'Orbitron', monospace;
-      font-size: 20px;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'tnum' 1;
+      font-size: 22px;
       font-weight: 700;
+      letter-spacing: -0.3px;
       color: var(--primary);
     }
+    /* Upper bound of a price range — same size as price-value but de-emphasized
+       so the lower price reads as the anchor. */
+    .price-value-faded {
+      opacity: 0.55;
+      font-weight: 600;
+    }
 
+    /* Range display: stacked two-line block, both rows same size as a single
+       price so the visual weight is consistent across cards. Upper bound is
+       faded so the lower price reads as the "anchor". */
     .price-range {
-      font-family: 'Orbitron', monospace;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--primary);
-      line-height: 1.3;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      line-height: 1.15;
     }
 
     .price-suffix {
@@ -596,7 +628,7 @@
       border-radius: 12px;
       padding: 16px 60px 16px 18px;
       color: var(--text);
-      font-family: 'Orbitron', monospace;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
       font-size: 24px;
       font-weight: 700;
       outline: none;
@@ -610,7 +642,7 @@
       right: 20px;
       top: 50%;
       transform: translateY(-50%);
-      font-family: 'Orbitron', monospace;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
       font-size: 20px;
       color: var(--primary);
       font-weight: 700;
@@ -688,7 +720,7 @@
 
     .rate-applied strong {
       color: var(--primary);
-      font-family: 'Orbitron', monospace;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
       font-size: 14px;
     }
 
@@ -709,7 +741,7 @@
     }
 
     .vnd-output-value {
-      font-family: 'Orbitron', monospace;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
       font-size: 34px;
       font-weight: 700;
       color: var(--primary);
@@ -771,13 +803,13 @@
 
     .rate-row .tier-label { font-weight: 700; font-size: 14px; }
     .rate-row .tier-rate {
-      font-family: 'Orbitron', monospace;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
       font-size: 15px;
       color: var(--primary);
       font-weight: 700;
     }
     .rate-row .tier-rate-day {
-      font-family: 'Orbitron', monospace;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
       font-size: 13px;
       color: var(--accent2);
       font-weight: 700;
@@ -890,7 +922,7 @@
     }
 
     .country-rate-pill .pill-rate {
-      font-family: 'Orbitron', monospace;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
       font-weight: 700;
       color: var(--primary);
       font-size: 14px;
@@ -1259,7 +1291,12 @@
 
     function priceDisplay(p) {
       if (p.priceHigh && p.priceHigh > p.price) {
-        return `<span class="price-range">${fmt(p.price)} – ${fmt(p.priceHigh)} ₫</span>`;
+        // Stacked range: both rows use .price-value sizing so visual weight
+        // matches single-price cards. Upper bound is faded for hierarchy.
+        return `<span class="price-range">
+          <span class="price-value">${formatVnd(p.price)}</span>
+          <span class="price-value price-value-faded">~ ${formatVnd(p.priceHigh)}</span>
+        </span>`;
       }
       return `<span class="price-value">${formatVnd(p.price)}</span>${p.suffix ? `<span class="price-suffix"> ${p.suffix}</span>` : ''}`;
     }
